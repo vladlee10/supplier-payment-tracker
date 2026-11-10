@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="{{ language }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ _('Загрузить накладную') }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+{% include "sidebar.html" %}
+<main class="page-content">
+    <h1>{{ _('Накладная по фотографии') }}</h1>
+    <p>{{ _('Загрузите фото. Проверьте распознанные товары и суммы, затем сохраните накладную.') }}</p>
+    {% if error %}<p role="alert">{{ error }}</p>{% endif %}
+    <form method="post" enctype="multipart/form-data" id="upload-form">
+        <label for="photo">{{ _('Фотография накладной') }}</label>
+        <input type="file" id="photo" name="photo" accept="image/jpeg,image/png" required>
+        <p class="field-hint">{{ _('JPG или PNG, до 15 МБ. Все края накладной и цифры должны быть видны.') }}</p>
+        <button type="submit" id="recognize-button">{{ _('Распознать накладную') }}</button>
+        <p id="recognition-progress" role="status" hidden>{{ _('Распознаём товары… Для накладной на нескольких языках может потребоваться несколько минут.') }}</p>
+    </form>
+</main>
+<script>
+document.getElementById('upload-form').addEventListener('submit', () => {
+    document.getElementById('recognize-button').disabled = true;
+    document.getElementById('recognition-progress').hidden = false;
+});
+</script>
+</body>
+</html>

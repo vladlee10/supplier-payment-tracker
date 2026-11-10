@@ -1,0 +1,115 @@
+{% from 'ui_icons.html' import icon %}
+<!DOCTYPE html>
+<html lang="{{ language }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ _('Обзор магазина · Учёт поставщиков') }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+</head>
+<body>
+{% include 'sidebar.html' %}
+<main class="page-content dashboard">
+    <div class="dashboard-breadcrumb"><span>{{ _('Магазин') }}</span>{{ icon('chevron-right',12) }}<strong>{{ _('Обзор') }}</strong></div>
+    <header class="dashboard-header">
+        <div><div class="dashboard-heading-line"><h1>{{ _('Обзор магазина') }}</h1><span class="live-label"><i></i>{{ _('Актуальные данные') }}</span></div>
+            <p>{{ _('Поставки, оплаты и текущие расчёты с поставщиками.') }}</p></div>
+        <a class="dashboard-primary" href="{{ url_for('invoices.upload') }}">{{ icon('plus',18) }}{{ _('Загрузить накладную') }}</a>
+    </header>
+
+    <div class="dashboard-period-row">
+        <div class="period-description">{{ icon('calendar',18) }}<span>{{ _('Сводка за') }} <strong>{{ month_label if language=='en' else month_label|lower }}</strong></span></div>
+        <div class="month-controls">
+            {% if selected_month != current_month %}<a class="current-month-link" href="{{ url_for('index') }}">{{ _('Этот месяц') }}</a>{% endif %}
+            <form class="month-form" method="get" action="{{ url_for('index') }}">
+                {% if previous_month %}<a class="month-arrow" href="{{ url_for('index', month=previous_month) }}" aria-label="{{ _('Предыдущий месяц') }}">{{ icon('chevron-left',16) }}</a>{% endif %}
+                <label class="visually-hidden" for="overview-month">{{ _('Месяц для сводки') }}</label>
+                <input type="month" id="overview-month" name="month" value="{{ selected_month }}" required>
+                {% if next_month %}<a class="month-arrow" href="{{ url_for('index', month=next_month) }}" aria-label="{{ _('Следующий месяц') }}">{{ icon('chevron-right',16) }}</a>{% endif %}
+                <button class="month-apply" type="submit">{{ _('Показать') }}</button>
+            </form>
+        </div>
+    </div>
+    {% if error %}<p role="alert">{{ error }}</p>{% endif %}
+
+    <section class="overview-stats" aria-label="{{ _('Основные показатели') }}">
+        <article class="stat-card"><div class="stat-top"><span>{{ _('Поставки за месяц') }}</span><span class="stat-icon lavender">{{ icon('box') }}</span></div>
+            <strong class="stat-amount" data-stat="deliveries">{{ monthly_deliveries|money }} <small>₩</small></strong>
+            <div class="stat-caption">{{ monthly_delivery_count }} <span>{{ _('за выбранный период') }}</span></div></article>
+        <article class="stat-card"><div class="stat-top"><span>{{ _('Оплачено за месяц') }}</span><span class="stat-icon mint">{{ icon('check') }}</span></div>
+            <strong class="stat-amount" data-stat="payments">{{ monthly_payments|money }} <small>₩</small></strong>
+            <div class="stat-caption">{{ monthly_payment_count }} <span>{{ _('записано в учёте') }}</span></div></article>
+        <article class="stat-card debt-card"><div class="stat-top"><span>{{ _('Текущий долг') }}</span><span class="stat-icon">{{ icon('wallet') }}</span></div>
+            <strong class="stat-amount" data-stat="debt">{{ debt|money }} <small>₩</small></strong>
+            <div class="stat-caption">{{ debt_suppliers_label }} <span>{{ _('· все периоды') }}</span></div></article>
+        <article class="stat-card"><div class="stat-top"><span>{{ _('Накладные к оплате') }}</span><span class="stat-icon peach">{{ icon('document') }}</span></div>
+            <strong class="stat-amount" data-stat="pending">{{ pending }}</strong>
+            <div class="stat-caption">{% if partial %}{{ partial_label }}{% else %}{{ _('По всем поставщикам') }}{% endif %}<span> {{ _('· все периоды') }}</span></div></article>
+    </section>
+
+    {% if allocation_suppliers %}
+    <aside class="overview-notice">{{ icon('info',20) }}<div><strong>{{ _('Есть оплаты без привязки к накладным') }}</strong><p>{{ _('Распределите их в разделе «Оплаты», чтобы уточнить, какие накладные закрыты.') }}</p></div>
+        <a href="{{ url_for('payments', supplier_id=allocation_suppliers[0].id) }}">{{ _('Распределить') }} {{ icon('arrow',16) }}</a></aside>
+    {% endif %}
+
+    <div class="dashboard-columns">
+        <section class="overview-panel supplier-panel" aria-labelledby="suppliers-title">
+            <header class="panel-heading"><div><h2 id="suppliers-title">{{ _('Расчёты с поставщиками') }}</h2><p>{{ _('Остатки по всем накладным') }}</p></div><a href="{{ url_for('suppliers') }}" class="quiet-link">{{ _('Все поставщики') }} {{ icon('arrow',15) }}</a></header>
+            <div class="supplier-toolbar">
+                <div class="supplier-tabs" role="group" aria-label="{{ _('Фильтр поставщиков') }}">
+                    <button type="button" class="supplier-tab is-selected" data-supplier-filter="all" aria-pressed="true">{{ _('Все') }} <span>{{ suppliers|length }}</span></button>
+                    <button type="button" class="supplier-tab" data-supplier-filter="debt" aria-pressed="false">{{ _('С долгом') }} <span>{{ debt_suppliers }}</span></button>
+                    <button type="button" class="supplier-tab" data-supplier-filter="clear" aria-pressed="false">{{ _('Без долга') }}</button>
+                </div>
+                <label class="supplier-search">{{ icon('search',17) }}<span class="visually-hidden">{{ _('Поиск поставщика') }}</span><input type="search" id="supplier-search" placeholder="{{ _('Найти поставщика') }}" autocomplete="off"></label>
+            </div>
+            <div class="overview-table-scroll">
+                <table class="overview-table">
+                    <thead><tr><th>{{ _('Поставщик') }}</th><th class="count-cell">{{ _('К оплате') }}</th><th class="balance-cell">{{ _('Остаток долга') }}</th><th><span class="visually-hidden">{{ _('Открыть') }}</span></th></tr></thead>
+                    <tbody id="overview-suppliers">
+                    {% for supplier in suppliers %}
+                        <tr data-supplier-row data-name="{{ supplier.name|lower }}" data-has-debt="{{ 'true' if supplier.debt else 'false' }}">
+                            <td><a class="supplier-name" href="{{ url_for('payments',supplier_id=supplier.id) }}"><span class="supplier-avatar avatar-{{ supplier.id % 5 }}">{{ supplier.name[:1]|upper }}</span><span><strong>{{ supplier.name }}</strong><small>{{ supplier.caption }}</small></span></a></td>
+                            <td class="count-cell"><span class="invoice-count {{ 'has-invoices' if supplier.pending else '' }}">{{ supplier.pending }}</span></td>
+                            <td class="balance-cell"><strong class="supplier-balance {{ 'balance-due' if supplier.debt else '' }}">{{ supplier.debt|money }} <span>₩</span></strong>
+                                {% if supplier.credit %}<small class="credit-caption">{{ _('Аванс') }} {{ supplier.credit|money }} ₩</small>{% elif not supplier.debt and not supplier.pending %}<small class="settled-caption">{{ icon('check',12) }}{{ _('Нет долга') }}</small>{% endif %}</td>
+                            <td class="row-action"><a href="{{ url_for('payments',supplier_id=supplier.id) }}" aria-label="{{ _('Открыть расчёты: {name}', name=supplier.name) }}">{{ icon('chevron-right',18) }}</a></td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="4"><div class="overview-empty">{{ icon('suppliers',30) }}<strong>{{ _('Добавьте первого поставщика') }}</strong><p>{{ _('Здесь появятся его накладные и остаток долга.') }}</p><a href="{{ url_for('suppliers') }}#supplier-form">{{ _('Добавить поставщика') }} {{ icon('arrow',14) }}</a></div></td></tr>
+                    {% endfor %}
+                    <tr id="no-supplier-results" hidden><td colspan="4"><div class="overview-empty compact-empty">{{ _('Поставщики не найдены. Измените поиск или фильтр.') }}</div></td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <footer class="supplier-panel-footer"><span id="supplier-visible-count" aria-live="polite">{{ supplier_count_label }}</span><span>{{ icon('clock',13) }}{{ _('На') }} {{ today_label }}</span></footer>
+        </section>
+
+        <div class="dashboard-right-column">
+            <section class="overview-panel activity-panel" aria-labelledby="activity-title">
+                <header class="panel-heading"><div><h2 id="activity-title">{{ _('Последние записи') }}</h2><p>{{ _('За выбранный месяц') }}</p></div><span class="panel-heading-icon">{{ icon('clock',19) }}</span></header>
+                <div class="activity-list">
+                    {% for event in activity %}
+                    <a class="activity-item" href="{{ url_for('invoices.detail',delivery_id=event.id) if event.kind=='delivery' else url_for('allocate_payment',payment_id=event.id) }}">
+                        <span class="activity-icon {{ 'activity-paid' if event.kind=='payment' else 'activity-delivery' }}">{{ icon('check' if event.kind=='payment' else 'box',17) }}</span>
+                        <span class="activity-content"><span class="activity-title">{{ event.supplier_name }}</span><span class="activity-description">{% if event.kind=='payment' %}{{ _('Записана оплата') }}{% elif event.invoice_number %}{{ _('Накладная №') }} {{ event.invoice_number }}{% else %}{{ _('Поставка #') }}{{ event.id }}{% endif %}</span><span class="activity-date">{{ event.date_label }}</span></span>
+                        <strong class="activity-amount">{{ event.amount_minor|money }}<small> ₩</small></strong>
+                    </a>
+                    {% else %}<div class="overview-empty activity-empty">{{ icon('document',28) }}<strong>{{ _('За этот месяц записей нет') }}</strong><p>{{ _('Добавьте поставку или выберите другой месяц.') }}</p></div>{% endfor %}
+                </div>
+            </section>
+
+            <section class="overview-panel quick-panel" aria-labelledby="quick-title">
+                <h2 id="quick-title">{{ _('Быстрые действия') }}</h2>
+                <a href="{{ url_for('invoices.upload') }}"><span class="quick-icon">{{ icon('upload',19) }}</span><span><strong>{{ _('Накладная по фото') }}</strong><small>{{ _('Распознать товары и суммы') }}</small></span>{{ icon('chevron-right',16) }}</a>
+                <a href="{{ url_for('suppliers') }}#supplier-form"><span class="quick-icon">{{ icon('suppliers',19) }}</span><span><strong>{{ _('Добавить поставщика') }}</strong><small>{{ _('Начать учёт поставок') }}</small></span>{{ icon('chevron-right',16) }}</a>
+                <a href="{{ url_for('payments') }}"><span class="quick-icon">{{ icon('wallet',19) }}</span><span><strong>{{ _('Перейти к оплатам') }}</strong><small>{{ _('Выбрать нужные накладные') }}</small></span>{{ icon('chevron-right',16) }}</a>
+            </section>
+        </div>
+    </div>
+    <footer class="overview-footer"><span>{{ _('Суммы указаны в корейских вонах · ₩') }}</span><span>{{ _('Период меняет сводку поставок и оплат. Долги показаны за всё время.') }}</span></footer>
+</main>
+<script src="{{ url_for('static',filename='dashboard.js') }}"></script>
+</body>
+</html>

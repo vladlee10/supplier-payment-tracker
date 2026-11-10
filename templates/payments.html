@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="{{ language }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ _('Оплаты') }}</title>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='ledger.css') }}">
+</head>
+<body>
+    {% include "sidebar.html" %}
+
+    <main class="page-content">
+        <h1>{{ _('Оплаты') }}</h1>
+        {% if request.args.get('result')=='cancelled' %}<p class="payment-notice" role="status">{{ _('Запись оплаты отменена и сохранена в истории. Долг и остатки накладных пересчитаны.') }}</p>{% endif %}
+
+        <form method="get" action="{{ url_for('payments') }}">
+            <label for="supplier_id">{{ _('Поставщик') }}</label>
+
+            <select id="supplier_id" name="supplier_id"
+                    onchange="this.form.requestSubmit()">
+                <option value="">{{ _('Выберите поставщика') }}</option>
+
+                {% for supplier in suppliers %}
+                    {% if selected_supplier and supplier['id'] == selected_supplier['id'] %}
+                        <option value="{{ supplier['id'] }}" selected>
+                            {{ supplier["name"] }}
+                        </option>
+                    {% else %}
+                        <option value="{{ supplier['id'] }}">
+                            {{ supplier["name"] }}
+                        </option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+
+            <noscript>
+                <button type="submit">{{ _('Показать накладные') }}</button>
+            </noscript>
+        </form>
+
+        {% if error %}
+            <p role="alert">{{ error }}</p>
+        {% endif %}
+
+        {% if selected_supplier %}
+            <h2>{{ selected_supplier["name"] }} {{ _('— открытые накладные') }}</h2>
+
+            <p>
+                {{ _('Остаток долга:') }}
+                <strong>{{ debt|money }} ₩</strong>
+            </p>
+
+            {% if credit %}
+                <p>{{ _('Аванс:') }} {{ credit|money }} ₩</p>
+            {% endif %}
+
+            {% if unallocated %}
+                <div class="payment-notice">
+                    <p>
+                        {{ _('Есть ранее записанные оплаты. Укажите, какие накладные они покрывают, прежде чем записывать новую оплату.') }}
+                    </p>
+
+                    {% for payment in unallocated %}
+                        <p>
+                            {{ _('Оплата от') }} {{ payment["payment_date"] }}{{ _(', осталось распределить') }}
+                            {{ payment["available"]|money }} ₩:
+                            <a href="{{ url_for('allocate_payment', payment_id=payment['id']) }}">
+                                {{ _('выбрать накладную') }}
+                            </a>
+                        </p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="table-scroll">
+                <table class="payment-table">
+                    <thead>
+                        <tr>
+                            <th>{{ _('№ записи') }}</th>
+                            <th>{{ _('Дата поставки') }}</th>
+                            <th>{{ _('Сумма накладной') }}</th>
+                            <th>{{ _('Осталось оплатить') }}</th>
+                            <th>{{ _('Действие') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for invoice in invoices %}
+                            <tr>
+                                <td><a href="{{ url_for('invoices.detail', delivery_id=invoice['id']) }}">{{ invoice["invoice_number"] or "#" ~ invoice["id"] }}</a></td>
+                                <td>{{ invoice["delivery_date"] }}</td>
+                                <td>{{ invoice["amount_minor"]|money }} ₩</td>
+                                <td>{{ invoice["remaining"]|money }} ₩</td>
+                                <td>
+                                    {% if unallocated %}
+                                        {{ _('Сначала учтите прежние оплаты') }}
+                                    {% else %}
+                                        <form method="post"
+                                              action="{{ url_for('payments') }}"
+                                              class="invoice-pay-form">
+                                            <input type="hidden" name="supplier_id"
+                                                   value="{{ selected_supplier['id'] }}">
+
+                                            <input type="hidden" name="delivery_id"
+                                                   value="{{ invoice['id'] }}">
+
+                                            <input type="hidden" name="expected_remaining"
+                                                   value="{{ invoice['remaining'] }}">
+
+                                            <button type="submit">{{ _('Оплатить') }}</button>
+                                        </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="5">{{ _('Неоплаченных накладных нет.') }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <p>
+                 {{ _('Оплаченая накладная появится в разделе') }}
+                <a href="{{ url_for('paid_invoices') }}">{{ _('«Оплаченные накладные»') }}</a>.
+            </p>
+        {% endif %}
+
+        <h2>{{ _('История оплат') }}</h2>
+
+        <div class="table-scroll">
+            <table class="payment-table">
+                <thead>
+                    <tr>
+                        <th>{{ _('Дата') }}</th>
+                        <th>{{ _('Поставщик') }}</th>
+                        <th>{{ _('Сумма') }}</th>
+                        <th>{{ _('Примечание') }}</th>
+                        <th>{{ _('Статус') }}</th>
+                        <th>{{ _('Накладные') }}</th>
+                        <th>{{ _('Действие') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for payment in payments %}
+                        <tr class="{{ 'payment-cancelled' if payment.cancelled_at else '' }}">
+                            <td>{{ payment["payment_date"] }}</td>
+                            <td>{{ payment["supplier_name"] }}</td>
+                            <td>{{ payment["amount_minor"]|money }} ₩</td>
+                            <td>{{ payment["note"] or "—" }}{% if payment.cancelled_at %}<small class="ledger-small">{{ _('Причина отмены:') }} {{ payment.cancellation_reason }}</small>{% endif %}</td>
+                            <td><span class="ledger-badge {{ 'ledger-cancelled' if payment.cancelled_at else '' }}">{{ _('Отменена') if payment.cancelled_at else _('Учтена') }}</span>{% if payment.cancelled_at %}<small class="ledger-small">{{ payment.cancelled_at|local_datetime }}</small>{% endif %}</td>
+                            <td>
+                                <a href="{{ url_for('ledger_corrections.cancel_payment', payment_id=payment.id) if payment.cancelled_at else url_for('allocate_payment', payment_id=payment.id) }}">
+                                    {{ _('Накладные') }}
+                                </a>
+                            </td>
+                            <td>{% if not payment.cancelled_at %}<a class="ledger-action ledger-cancel-link" href="{{ url_for('ledger_corrections.cancel_payment', payment_id=payment.id) }}">{{ _('Отменить запись') }}</a>{% else %}—{% endif %}</td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="7">{{ _('Оплат пока нет.') }}</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+</body>
+</html>

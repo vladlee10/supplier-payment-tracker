@@ -1,0 +1,27 @@
+.report-heading p, .report-title-row p, .report-explanation { color: #647783; line-height: 1.6; }
+.report-heading h1 { margin-bottom: 8px; }
+.report-heading { margin-bottom: 28px; }
+.report-controls { align-items: end; gap: 18px; }
+.report-controls > div { flex: 1; min-width: 210px; }
+.report-controls label { display: block; margin-bottom: 9px; }
+.report-controls input, .report-controls select { display: block; width: 100%; }
+.report-controls button { min-height: 45px; }
+.report-title-row { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin: 35px 0 20px; }
+.report-title-row h2 { margin: 0 0 6px; }
+.report-title-row p { margin: 0; }
+.report-download { display: inline-flex; align-items: center; justify-content: center; gap: 9px; border-radius: 9px; background: #117c88; padding: 13px 20px; color: white; text-decoration: none; font-weight: 600; white-space: nowrap; }
+.report-download:hover { background: #096875; }
+.report-stats { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 15px; }
+.report-stats > div { padding: 23px 20px; background: white; border: 1px solid #e0e8ec; border-radius: 14px; }
+.report-stats span { display: block; color: #637580; font-size: 13px; line-height: 1.5; }
+.report-stats strong { display: block; margin-top: 15px; font-size: 23px; overflow-wrap: anywhere; }
+.report-stats .report-closing { background: #eaf5f5; border-color: #cee4e5; }
+.report-explanation { font-size: 13px; margin: 12px 0; }
+.report-table { min-width: 840px; }
+.report-table td:nth-child(3), .report-table td:nth-child(4), .report-table td:nth-child(5) { text-align: right; white-space: nowrap; }
+.report-table td:first-child { white-space: nowrap; }
+.report-bookend { background: #edf4f6; font-weight: 600; }
+.report-empty { text-align: center; color: #708590; padding: 65px 20px; }
+.report-empty h2 { color: #29434f; margin-top: 18px; }
+@media(max-width:1100px) { .report-stats { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+@media(max-width:600px) { .report-title-row { align-items: stretch; flex-direction: column; } .report-stats { grid-template-columns: 1fr; } }

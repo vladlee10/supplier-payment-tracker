@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="{{ language }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ _('Оплаченные накладные') }}</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    {% include "sidebar.html" %}
+
+    <main class="page-content">
+        <h1>{{ _('Оплаченные накладные') }}</h1>
+        <p>{{ _('Нажмите на поставщика, чтобы открыть его накладные.') }}</p>
+
+        {% for group in supplier_groups %}
+            <details class="paid-supplier">
+                <summary>
+                    {{ group["name"] }}
+                    ({{ group["invoices"]|length }})
+                </summary>
+
+                <div class="paid-table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>{{ _('№ записи') }}</th>
+                                <th>{{ _('Дата поставки') }}</th>
+                                <th>{{ _('Сумма') }}</th>
+                                <th>{{ _('Последняя оплата') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for invoice in group["invoices"] %}
+                                <tr>
+                                    <td><a href="{{ url_for('invoices.detail', delivery_id=invoice['id']) }}">{{ invoice["invoice_number"] or "#" ~ invoice["id"] }}</a></td>
+                                    <td>{{ invoice["delivery_date"] }}</td>
+                                    <td>
+                                        {{ invoice["amount_minor"]|money }} ₩
+                                    </td>
+                                    <td>{{ invoice["last_payment_date"] }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </details>
+        {% else %}
+            <p>
+                {{ _('Полностью оплаченных накладных пока нет. Привяжите записанные оплаты к накладным в разделе') }}
+                <a href="{{ url_for('payments') }}">{{ _('«Оплаты»') }}</a>.
+            </p>
+        {% endfor %}
+    </main>
+</body>
+</html>

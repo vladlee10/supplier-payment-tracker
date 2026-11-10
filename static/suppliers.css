@@ -1,0 +1,30 @@
+.supplier-caption { margin: 0 0 20px; color: #647580; line-height: 1.6; }
+.supplier-caption strong { color: #182b34; }
+.suppliers-table { min-width: 570px; }
+.suppliers-table th:first-child, .suppliers-table td:first-child { width: 80px; }
+.suppliers-table th:last-child, .suppliers-table td:last-child { width: 310px; }
+.suppliers-table td:nth-child(2) { overflow-wrap: anywhere; }
+.supplier-row-actions, .supplier-form-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.supplier-action { display: inline-flex; justify-content: center; align-items: center; padding: 10px 14px; border: 1px solid #d7e4e8; border-radius: 8px; background: #f1f7f8; color: #18545e; font-weight: 600; font-size: 14px; text-decoration: none; }
+.supplier-action:hover { background: #e3eff1; border-color: #a8c9d0; }
+.supplier-action-danger { color: #a43535; background: #fff; border-color: #eddddd; }
+.supplier-action-danger:hover { background: #fff0f0; border-color: #d9aaaa; }
+.supplier-action:focus-visible, .supplier-back:focus-visible { outline: 2px solid #148295; outline-offset: 3px; }
+.supplier-success { padding: 16px 20px; color: #216655; background: #eaf6f0; border: 1px solid #cce6dc; border-radius: 12px; }
+.supplier-back { display: inline-block; margin-bottom: 22px; color: #18545e; font-weight: 600; text-decoration: none; }
+.supplier-back:hover { text-decoration: underline; }
+.supplier-card { max-width: 760px; }
+.supplier-card > input[name="name"] { flex-basis: 100%; min-width: 0; }
+.supplier-card .supplier-form-actions { flex-basis: 100%; margin-top: 8px; }
+.supplier-delete-card { padding: 28px; background: #fff; border: 1px solid #e2e8ed; border-radius: 16px; }
+.supplier-delete-card h2 { margin: 0 0 16px; overflow-wrap: anywhere; }
+.supplier-delete-card p { line-height: 1.6; }
+.supplier-delete-card .supplier-form-actions { margin-top: 24px; }
+.supplier-delete-form { padding: 0; margin-top: 24px; border: 0; border-radius: 0; }
+.supplier-danger-button { background: #b83e3e; }
+.supplier-danger-button:hover { background: #9d2d2d; }
+@media (max-width:600px) {
+    .suppliers-table th, .suppliers-table td { padding: 14px 16px; }
+    .supplier-row-actions { gap: 7px; }
+    .supplier-delete-card { padding: 22px; }
+}

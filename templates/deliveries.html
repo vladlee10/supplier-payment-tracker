@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="{{ language }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ _('Поставки — Учёт оплат') }}</title>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='ledger.css') }}">
+</head>
+<body>
+    {% include "sidebar.html" %}
+    <main class="page-content">
+    <h1>{{ _('Поставки') }}</h1>
+    <p><a class="button-link" href="{{ url_for('invoices.upload') }}">{{ _('+ Накладная по фотографии') }}</a></p>
+
+    {% if suppliers %}
+        <form method="post">
+            <label for="supplier_id">{{ _('Поставщик') }}</label>
+            <select id="supplier_id" name="supplier_id" required>
+    <option value="">{{ _('Выберите поставщика') }}</option>
+
+    {% for supplier in suppliers %}
+        {% if request.form.get('supplier_id') == supplier['id']|string %}
+            <option value="{{ supplier['id'] }}" selected>
+                {{ supplier["name"] }}
+            </option>
+        {% else %}
+            <option value="{{ supplier['id'] }}">
+                {{ supplier["name"] }}
+            </option>
+        {% endif %}
+    {% endfor %}
+</select>
+
+            <label for="delivery_date">{{ _('Дата поставки') }}</label>
+            <input id="delivery_date" name="delivery_date" type="date"
+                   value="{{ request.form.get('delivery_date', today) }}"
+                   required>
+
+            <label for="amount_krw">{{ _('Сумма поставки, ₩') }}</label>
+            <input id="amount_krw" name="amount_krw" type="number"
+                   min="0.01" step="0.01" placeholder="{{ _('Например, 100000') }}"
+                   value="{{ request.form.get('amount_krw', '') }}"
+                   required>
+
+            <button type="submit">{{ _('Записать поставку') }}</button>
+        </form>
+    {% else %}
+        <p>{{ _('Сначала добавьте поставщика на главной странице.') }}</p>
+    {% endif %}
+
+    {% if error %}
+        <p role="alert">{{ error }}</p>
+    {% endif %}
+
+    <h2>{{ _('История поставок') }}</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>{{ _('Накладная') }}</th><th>{{ _('Дата') }}</th>
+                <th>{{ _('Поставщик') }}</th>
+                <th>{{ _('Сумма') }}</th>
+                <th>{{ _('Действие') }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for delivery in deliveries %}
+                <tr>
+                    <td><a href="{{ url_for('invoices.detail', delivery_id=delivery['id']) }}">{{ delivery["invoice_number"] or "#" ~ delivery["id"] }}</a></td>
+                    <td>{{ delivery["delivery_date"] }}</td>
+                    <td>{{ delivery["supplier_name"] }}</td>
+                    <td>
+                        {{ delivery["amount_minor"]|money }} ₩
+                    </td>
+                    <td><a class="ledger-action" href="{{ url_for('ledger_corrections.edit_invoice', delivery_id=delivery.id) }}">{{ _('Редактировать') }}</a></td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="5">{{ _('Поставок пока нет.') }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </main>
+</body>
+</html>

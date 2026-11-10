@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="{{ language }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ _('Отменённая запись оплаты') if payment.cancelled_at else _('Отменить запись оплаты') }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='ledger.css') }}">
+</head>
+<body>
+{% include 'sidebar.html' %}
+<main class="page-content">
+    <h1>{{ _('Запись оплаты отменена') if payment.cancelled_at else _('Отменить запись оплаты?') }}</h1>
+    {% if error %}<p role="alert">{{ error }}</p>{% endif %}
+    <section class="ledger-card">
+        <span class="ledger-badge {{ 'ledger-cancelled' if payment.cancelled_at else '' }}">{{ _('Отменена') if payment.cancelled_at else _('Учтена') }}</span>
+        <h2>{{ payment.supplier_name }}</h2>
+        <p>{{ _('Оплата №') }} {{ payment.id }} {{ _('от') }} {{ payment.payment_date }}</p>
+        <strong class="ledger-amount">{{ payment.amount_minor|money }} ₩</strong>
+        {% if payment.note %}<p>{{ payment.note }}</p>{% endif %}
+        {% if payment.cancelled_at %}
+            <p>{{ _('Отменена') }} {{ payment.cancelled_at|local_datetime }} {{ _('· время Кореи') }}</p>
+            <p><strong>{{ _('Причина:') }}</strong> {{ payment.cancellation_reason }}</p>
+            <p class="ledger-hint">{{ _('Запись и её прежние привязки сохранены в истории. Эта оплата не уменьшает долг.') }}</p>
+        {% else %}
+            <p class="payment-notice">{{ _('Отмена изменит запись в учёте магазина. Банковский перевод она не отменяет.') }}</p>
+        {% endif %}
+        {% if allocations %}
+        <h3>{{ _('Прежние привязки к накладным') if payment.cancelled_at else _('Какие накладные затронет отмена') }}</h3>
+        <div class="table-scroll"><table>
+            <thead><tr><th>{{ _('Накладная') }}</th><th>{{ _('Из этой оплаты') }}</th><th>{{ _('Текущий остаток') if payment.cancelled_at else _('Остаток после отмены') }}</th></tr></thead>
+            <tbody>{% for row in allocations %}<tr>
+                <td><a href="{{ url_for('invoices.detail', delivery_id=row.delivery_id) }}">{{ row.invoice_number or '#' ~ row.delivery_id }}</a> · {{ row.delivery_date }}</td>
+                <td>{{ row.amount_minor|money }} ₩</td><td>{{ row.remaining_after|money }} ₩</td>
+            </tr>{% endfor %}</tbody>
+        </table></div>
+        {% else %}<p>{{ _('У этой оплаты нет привязок к накладным.') }} {{ _('Она больше не учитывается как аванс.') if payment.cancelled_at else _('После отмены она перестанет учитываться как аванс.') }}</p>{% endif %}
+        {% if not payment.cancelled_at %}
+        <form method="post" class="ledger-cancel-form">
+            <input type="hidden" name="form_token" value="{{ form_token }}">
+            <label for="reason">{{ _('Причина отмены') }}</label>
+            <textarea id="reason" name="reason" maxlength="1000" placeholder="{{ _('Например, оплату записали дважды') }}" required>{{ request.form.get('reason', '') }}</textarea>
+            <div class="ledger-actions">
+                <button type="submit" class="ledger-danger">{{ _('Отменить запись оплаты') }}</button>
+                <a class="ledger-action" href="{{ url_for('payments', supplier_id=payment.supplier_id) }}">{{ _('Оставить оплату') }}</a>
+            </div>
+        </form>
+        {% endif %}
+    </section>
+</main>
+</body>
+</html>

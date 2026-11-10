@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="{{ language }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ _('Удаление поставщика') }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='suppliers.css') }}">
+</head>
+<body>
+{% include 'sidebar.html' %}
+<main class="page-content">
+    <h1>{{ _('Поставщик с историей') if has_history else _('Удалить поставщика?') }}</h1>
+    {% if error %}<p role="alert">{{ error }}</p>{% endif %}
+    <section class="supplier-card supplier-delete-card" aria-label="{{ _('Карточка поставщика') }}">
+        <h2>{{ supplier.name }}</h2>
+        {% if has_history %}
+            <p>{{ _('У поставщика есть записи: поставки —') }} {{ supplier.delivery_count }}{{ _(', оплаты —') }} {{ supplier.payment_count }}.</p>
+            <p>{{ _('Карточка нужна для истории расчётов, поэтому её удаление недоступно. Название можно изменить.') }}</p>
+            <div class="supplier-form-actions">
+                <a class="button-link" href="{{ url_for('supplier_management.edit', supplier_id=supplier.id) }}">{{ _('Редактировать название') }}</a>
+                <a class="supplier-action" href="{{ url_for('payments', supplier_id=supplier.id) }}">{{ _('Открыть расчёты') }}</a>
+                <a class="supplier-action" href="{{ url_for('suppliers') }}">{{ _('Назад к списку') }}</a>
+            </div>
+        {% else %}
+            <p>{{ _('У поставщика пока нет поставок и оплат. Подтвердите удаление этой карточки из списка.') }}</p>
+            <form method="post" class="supplier-delete-form">
+                <input type="hidden" name="form_token" value="{{ form_token }}">
+                <button type="submit" class="supplier-danger-button">{{ _('Удалить поставщика') }}</button>
+                <a class="supplier-action" href="{{ url_for('suppliers') }}">{{ _('Отмена') }}</a>
+            </form>
+        {% endif %}
+    </section>
+</main>
+</body>
+</html>

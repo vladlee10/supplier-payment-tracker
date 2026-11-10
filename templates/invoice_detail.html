@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+{% set document_number = document.invoice_number if document else '' %}
+<html lang="{{ language }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ _('Накладная') }} {{ '№ ' ~ document_number if document_number else '#' ~ delivery.id }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='ledger.css') }}">
+</head>
+<body>
+{% include "sidebar.html" %}
+<main class="page-content">
+    <h1>{{ _('Накладная') }} {{ '№ ' ~ document_number if document_number else _('— запись #') ~ delivery.id }}</h1>
+    {% if request.args.get('result')=='updated' %}<p class="payment-notice" role="status">{{ _('Исправления сохранены. Долг и статус накладной пересчитаны.') }}</p>{% endif %}
+    <p><strong>{{ delivery.supplier_name }}</strong> · {{ delivery.delivery_date }}</p>
+    <div class="ledger-actions"><a class="ledger-action" href="{{ url_for('ledger_corrections.edit_invoice', delivery_id=delivery.id) }}">{{ _('Редактировать накладную') }}</a></div>
+    {% if document and document.buyer %}<p>{{ _('Покупатель:') }} {{ document.buyer }}</p>{% endif %}
+    <div class="invoice-summary">
+        <div><span>{{ _('Сумма накладной') }}</span><strong>{{ delivery.amount_minor|money }} ₩</strong></div>
+        <div><span>{{ _('Оплачено') }}</span><strong>{{ delivery.paid_minor|money }} ₩</strong></div>
+        <div><span>{{ _('Осталось оплатить') }}</span><strong>{{ (delivery.amount_minor-delivery.paid_minor)|money }} ₩</strong></div>
+    </div>
+    {% if items %}
+    <h2>{{ _('Товары') }}</h2>
+    <div class="table-scroll">
+        <table>
+            <thead><tr><th>№</th><th>{{ _('Товар') }}</th><th>{{ _('Кол-во') }}</th><th>{{ _('Ед.') }}</th><th>{{ _('Цена, ₩') }}</th><th>{{ _('Скидка, ₩') }}</th><th>{{ _('НДС, %') }}</th><th>{{ _('Сумма НДС, ₩') }}</th><th>{{ _('Сумма, ₩') }}</th></tr></thead>
+            <tbody>
+            {% for item in items %}
+                <tr><td>{{ item.position }}</td><td>{{ item.name }}</td><td>{{ item.quantity }}</td><td>{{ item.unit }}</td>
+                    <td>{{ item.unit_price_minor|money }}</td><td>{{ item.discount_minor|money if item.discount_minor else '—' }}</td><td>{{ item.vat_rate or '—' }}</td>
+                    <td>{{ item.vat_amount_minor|money if item.vat_amount_minor is not none else '—' }}</td><td>{{ item.line_total_minor|money }}</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if document.vat_total_minor is not none %}
+    <p>{{ _('В том числе НДС') if document.vat_mode=='included' else _('НДС дополнительно к товарам') }}: {{ document.vat_total_minor|money }} ₩</p>
+    {% endif %}
+    {% else %}<p>{{ _('В этой поставке сохранена общая сумма. Товарные строки не были добавлены.') }}</p>{% endif %}
+    {% if document %}
+    <details class="original-photo">
+        <summary>{{ _('Фотография оригинала') }}</summary>
+        <a href="{{ url_for('invoices.image', token=document.draft_token) }}" target="_blank" rel="noopener"><img src="{{ url_for('invoices.image', token=document.draft_token) }}" alt="{{ _('Оригинал накладной') }}"></a>
+    </details>
+    {% endif %}
+    <h2>{{ _('История изменений') }}</h2>
+    {% for revision in revisions %}
+        <details class="invoice-revision">
+            <summary>{{ revision.changed_at|local_datetime }} {{ _('· сумма') }} {{ revision.before.delivery.amount_minor|money }} → {{ revision.after.delivery.amount_minor|money }} ₩</summary>
+            <p class="revision-reason"><strong>{{ _('Причина:') }}</strong> {{ revision.reason }}</p>
+            {% with snapshot=revision.before, version_title=_('До исправления') %}{% include 'invoice_revision_snapshot.html' %}{% endwith %}
+            {% with snapshot=revision.after, version_title=_('После исправления') %}{% include 'invoice_revision_snapshot.html' %}{% endwith %}
+        </details>
+    {% else %}<p class="ledger-hint">{{ _('После сохранения эту накладную ещё не редактировали.') }}</p>{% endfor %}
+</main>
+</body>
+</html>

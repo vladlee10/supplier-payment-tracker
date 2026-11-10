@@ -1,0 +1,61 @@
+        <div class="invoice-fields">
+            <div>
+                <label for="invoice_number">{{ _('Номер накладной (необязательно)') }}</label>
+                <input id="invoice_number" name="invoice_number" value="{{ draft.invoice_number }}" maxlength="100">
+            </div>
+            <div>
+                <label for="delivery_date">{{ _('Дата накладной') }}</label>
+                <input id="delivery_date" name="delivery_date" type="date" value="{{ draft.delivery_date }}" required>
+            </div>
+            <div>
+                <label for="buyer">{{ _('Покупатель') }}</label>
+                <input id="buyer" name="buyer" value="{{ draft.buyer }}" maxlength="500">
+            </div>
+            <div>
+                <label for="expected_count">{{ _('Количество строк на документе') }}</label>
+                <input id="expected_count" name="expected_count" type="number" min="1" max="250" value="{{ draft.expected_count }}">
+            </div>
+        </div>
+        <div class="table-scroll">
+            <table class="invoice-editor">
+                <thead><tr><th>{{ _('Товар') }}</th><th>{{ _('Кол-во') }}</th><th>{{ _('Ед.') }}</th><th>{{ _('Цена, ₩') }}</th><th>{{ _('Скидка на строку, ₩') }}</th><th>{{ _('НДС, %') }}</th><th>{{ _('Сумма НДС, ₩') }}</th><th>{{ _('Сумма, ₩') }}</th><th></th></tr></thead>
+                <tbody id="invoice-rows">
+                {% for item in draft['items'] %}
+                    <tr>
+                        <td><input aria-label="{{ _('Название товара') }}" name="item_name" value="{{ item.name }}" maxlength="500" required>
+                            {% if item.notes %}<small class="row-hint">{% for note in item.notes %}{{ note|localize_message }} {% endfor %}</small>{% endif %}</td>
+                        <td><input aria-label="{{ _('Количество') }}" name="item_quantity" value="{{ item.quantity }}" inputmode="decimal" required></td>
+                        <td><input aria-label="{{ _('Единица измерения') }}" name="item_unit" value="{{ item.unit }}" maxlength="30"></td>
+                        <td><input aria-label="{{ _('Цена за единицу') }}" name="item_unit_price" value="{{ item.unit_price }}" inputmode="decimal" required></td>
+                        <td><input aria-label="{{ _('Скидка на строку') }}" name="item_discount" value="{{ item.discount or '0.00' }}" inputmode="decimal"></td>
+                        <td><input aria-label="{{ _('Ставка НДС') }}" name="item_vat_rate" value="{{ item.vat_rate }}" inputmode="decimal"></td>
+                        <td><input aria-label="{{ _('Сумма НДС') }}" name="item_vat_amount" value="{{ item.vat_amount }}" inputmode="decimal"></td>
+                        <td><input aria-label="{{ _('Сумма строки') }}" name="item_line_total" value="{{ item.line_total }}" inputmode="decimal" required></td>
+                        <td><button type="button" class="remove-row secondary-button" aria-label="{{ _('Удалить товарную строку') }}">×</button></td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <button type="button" class="secondary-button" id="add-row">{{ _('+ Добавить товар') }}</button>
+        <div class="invoice-fields">
+            <div>
+                <label for="printed_total">{{ _('Итого по накладной, ₩') if editing else _('Итого на бумажной накладной, ₩') }}</label>
+                <input id="printed_total" name="printed_total" value="{{ draft.printed_total }}" inputmode="decimal" required>
+            </div>
+            <div>
+                <label for="vat_total">{{ _('Общая сумма НДС на документе, ₩') }}</label>
+                <input id="vat_total" name="vat_total" value="{{ draft.vat_total }}" inputmode="decimal">
+            </div>
+            <div>
+                <label for="vat_mode">{{ _('Как учтён НДС') }}</label>
+                <select id="vat_mode" name="vat_mode" required>
+                    <option value="">{{ _('Выберите способ учёта НДС') }}</option>
+                    <option value="included" {% if draft.vat_mode=='included' %}selected{% endif %}>{{ _('Уже включён в суммы товаров') }}</option>
+                    <option value="excluded" {% if draft.vat_mode=='excluded' %}selected{% endif %}>{{ _('Добавляется к сумме товаров') }}</option>
+                </select>
+            </div>
+        </div>
+        <p id="invoice-check" role="status" class="payment-notice"></p>
+        <label class="review-check" id="discounts-check" hidden><input type="checkbox" name="discounts_reviewed" value="yes">{{ _('Я проверил скидки по оригиналу: разница между ценой × количеством и суммой действительно является скидкой.') }}</label>
+        <label class="review-check"><input type="checkbox" name="reviewed" value="yes" required>{{ _('Я проверил товары и суммы по оригиналу.') }}</label>

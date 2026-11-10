@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="{{ language }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ _('Редактировать поставщика') }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='suppliers.css') }}">
+</head>
+<body>
+{% include 'sidebar.html' %}
+<main class="page-content">
+    <h1>{{ _('Редактировать поставщика') }}</h1>
+    <p class="supplier-caption">{{ _('Текущее название:') }} <strong>{{ supplier.name }}</strong>{{ _('. Все поставки, накладные и оплаты останутся у этого поставщика.') }}</p>
+    {% if error %}<p role="alert">{{ error }}</p>{% endif %}
+    <form method="post" class="supplier-card">
+        <input type="hidden" name="form_token" value="{{ form_token }}">
+        <label for="name">{{ _('Название поставщика') }}</label>
+        <input id="name" name="name" type="text" value="{{ name }}" maxlength="200" autocomplete="off" required>
+        <div class="supplier-form-actions">
+            <button type="submit">{{ _('Сохранить изменения') }}</button>
+            <a class="supplier-action" href="{{ url_for('suppliers') }}">{{ _('Отмена') }}</a>
+        </div>
+    </form>
+</main>
+</body>
+</html>

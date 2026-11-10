@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="{{ language }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ _('Редактировать накладную') }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='ledger.css') }}">
+</head>
+<body>
+{% include 'sidebar.html' %}
+<main class="page-content">
+    <h1>{{ _('Редактировать накладную') }} {{ '№ ' ~ draft.invoice_number if detailed and draft.invoice_number else '#' ~ state.delivery.id }}</h1>
+    <p><strong>{{ state.delivery.supplier_name }}</strong> {{ _('· текущая сумма') }} {{ state.delivery.amount_minor|money }} {{ _('₩ · привязано оплат') }} {{ paid|money }} ₩</p>
+    <p class="ledger-hint">{{ _('Предыдущая версия сохранится в истории. Поставщик и записанные оплаты останутся прежними.') }}</p>
+    {% if error %}<p role="alert">{{ error }}</p>{% endif %}
+    {% if detailed %}
+    <details class="original-photo">
+        <summary>{{ _('Фотография оригинала') }}</summary>
+        <a href="{{ url_for('invoices.image', token=draft.token) }}" target="_blank" rel="noopener"><img src="{{ url_for('invoices.image', token=draft.token) }}" alt="{{ _('Оригинал накладной') }}"></a>
+    </details>
+    {% endif %}
+    <form method="post" class="invoice-review-form ledger-form" {% if detailed %}id="review-form" data-editing="true"{% endif %}>
+        <input type="hidden" name="form_token" value="{{ form_token }}">
+        {% if detailed %}
+            {% set editing = true %}
+            {% include 'invoice_editor_fields.html' %}
+        {% else %}
+            <p class="ledger-hint">{{ _('В этой поставке сохранена общая сумма без товарных строк. Можно исправить дату, сумму и примечание.') }}</p>
+            <div class="invoice-fields">
+                <div><label for="delivery_date">{{ _('Дата поставки') }}</label><input id="delivery_date" name="delivery_date" type="date" value="{{ draft.delivery_date }}" required></div>
+                <div><label for="printed_total">{{ _('Сумма поставки, ₩') }}</label><input id="printed_total" name="printed_total" inputmode="decimal" value="{{ draft.printed_total }}" required></div>
+            </div>
+            <label for="note">{{ _('Примечание') }}</label><textarea id="note" name="note" maxlength="1000">{{ draft.note }}</textarea>
+        {% endif %}
+        <label for="reason">{{ _('Причина исправления') }}</label>
+        <textarea id="reason" name="reason" maxlength="1000" placeholder="{{ _('Например, неверно указали количество товара') }}" required>{{ request.form.get('reason', '') }}</textarea>
+        <div class="ledger-actions">
+            <button type="submit" {% if detailed %}id="save-invoice"{% endif %}>{{ _('Сохранить исправления') }}</button>
+            <a class="ledger-action" href="{{ url_for('invoices.detail', delivery_id=state.delivery.id) }}">{{ _('Отмена') }}</a>
+        </div>
+    </form>
+</main>
+{% if detailed %}<script src="{{ url_for('static', filename='invoice_review.js') }}"></script>{% endif %}
+</body>
+</html>

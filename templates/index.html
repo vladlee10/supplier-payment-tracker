@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="{{ language }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ _('Учёт оплат поставщикам') }}</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='suppliers.css') }}">
+</head>
+<body>
+    {% include "sidebar.html" %}
+    <main class="page-content">
+    <h1>{{ _('Поставщики') }}</h1>
+    <form id="supplier-form" method="post" action="{{ url_for('suppliers') }}">
+        <label for="name">{{ _('Название поставщика') }}</label>
+        <input id="name" name="name" type="text" maxlength="200" value="{{ request.form.get('name', '') if error else '' }}" required>
+        <button type="submit">{{ _('Добавить поставщика') }}</button>
+    </form>
+
+    {% if error %}
+        <p role="alert">{{ error }}</p>
+    {% endif %}
+    {% if message %}<p class="supplier-success" role="status">{{ message }}</p>{% endif %}
+
+    <h2>{{ _('Список поставщиков') }}</h2>
+
+    <p class="supplier-caption">{{ _('Название можно изменить, сохранив все поставки и оплаты. Удалить можно карточку без истории.') }}</p>
+    <div class="table-scroll">
+    <table class="suppliers-table">
+        <thead>
+            <tr>
+                <th>№</th>
+                <th>{{ _('Поставщик') }}</th>
+                <th>{{ _('Действия') }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for supplier in suppliers %}
+                <tr>
+                    <td>{{ supplier["id"] }}</td>
+                    <td>{{ supplier["name"] }}</td>
+                    <td><div class="supplier-row-actions">
+                        <a class="supplier-action" href="{{ url_for('supplier_management.edit', supplier_id=supplier.id) }}" aria-label="{{ _('Редактировать поставщика «{name}»', name=supplier.name) }}">{{ _('Редактировать') }}</a>
+                        <a class="supplier-action supplier-action-danger" href="{{ url_for('supplier_management.delete', supplier_id=supplier.id) }}" aria-label="{{ _('Удалить поставщика «{name}»', name=supplier.name) }}">{{ _('Удалить') }}</a>
+                    </div></td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="3">{{ _('Поставщиков пока нет.') }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    </main>
+</body>
+</html>

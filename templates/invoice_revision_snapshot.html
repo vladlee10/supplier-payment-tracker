@@ -1,0 +1,22 @@
+<div class="revision-version">
+    <h3>{{ version_title }}</h3>
+    <dl class="revision-fields">
+        {% if snapshot.document %}<div><dt>{{ _('Номер') }}</dt><dd>{{ snapshot.document.invoice_number or _('Не указан') }}</dd></div>{% endif %}
+        <div><dt>{{ _('Дата') }}</dt><dd>{{ snapshot.delivery.delivery_date }}</dd></div>
+        <div><dt>{{ _('Сумма') }}</dt><dd>{{ snapshot.delivery.amount_minor|money }} ₩</dd></div>
+        {% if snapshot.document %}
+        <div><dt>{{ _('Покупатель') }}</dt><dd>{{ snapshot.document.buyer or '—' }}</dd></div>
+        <div><dt>{{ _('Учёт НДС') }}</dt><dd>{{ _('Включён в суммы товаров') if snapshot.document.vat_mode=='included' else _('Добавляется к товарам') }}</dd></div>
+        <div><dt>{{ _('НДС') }}</dt><dd>{{ snapshot.document.vat_total_minor|money if snapshot.document.vat_total_minor is not none else _('Не указан') }}{{ ' ₩' if snapshot.document.vat_total_minor is not none else '' }}</dd></div>
+        {% else %}<div><dt>{{ _('Примечание') }}</dt><dd>{{ snapshot.delivery.note or '—' }}</dd></div>{% endif %}
+    </dl>
+    {% if snapshot['items'] %}
+    <div class="table-scroll"><table>
+        <thead><tr><th>{{ _('Товар') }}</th><th>{{ _('Кол-во / ед.') }}</th><th>{{ _('Цена') }}</th><th>{{ _('Скидка') }}</th><th>{{ _('НДС, %') }}</th><th>{{ _('НДС') }}</th><th>{{ _('Сумма') }}</th></tr></thead>
+        <tbody>{% for item in snapshot['items'] %}<tr>
+            <td>{{ item.name }}</td><td>{{ item.quantity }} {{ item.unit }}</td><td>{{ item.unit_price_minor|money }} ₩</td>
+            <td>{{ item.discount_minor|money }} ₩</td><td>{{ item.vat_rate or '—' }}</td><td>{{ item.vat_amount_minor|money if item.vat_amount_minor is not none else '—' }}</td><td>{{ item.line_total_minor|money }} ₩</td>
+        </tr>{% endfor %}</tbody>
+    </table></div>
+    {% endif %}
+</div>

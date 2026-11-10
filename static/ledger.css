@@ -1,0 +1,29 @@
+.ledger-hint { color: #647580; line-height: 1.6; }
+.ledger-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
+.ledger-action { display: inline-flex; align-items: center; padding: 10px 14px; border: 1px solid #d7e4e8; border-radius: 8px; background: #f1f7f8; color: #18545e; font-size: 14px; font-weight: 600; text-decoration: none; }
+.ledger-action:hover { background: #e3eff1; }
+.ledger-action:focus-visible { outline: 2px solid #148295; outline-offset: 3px; }
+.ledger-danger, .ledger-danger:hover { background: #b83e3e; color: #fff; }
+.ledger-cancel-link { color: #a43535; background: #fff; border-color: #eddddd; }
+.ledger-cancel-link:hover { background: #fff0f0; }
+.ledger-card { padding: 28px; background: #fff; border: 1px solid #e2e8ed; border-radius: 16px; }
+.ledger-card h2 { margin: 16px 0; }
+.ledger-card p { line-height: 1.6; overflow-wrap: anywhere; }
+.ledger-amount { display: block; font-size: 30px; margin: 12px 0; }
+.ledger-form textarea, .ledger-cancel-form textarea { display: block; width: 100%; min-height: 92px; margin: 10px 0 24px; padding: 12px 14px; font: inherit; border: 1px solid #cbd5dc; border-radius: 8px; resize: vertical; }
+.ledger-form textarea:focus, .ledger-cancel-form textarea:focus { outline: 2px solid #148295; outline-offset: 2px; }
+.ledger-cancel-form { display: block; border: 0; border-radius: 0; padding: 0; margin-top: 28px; }
+.ledger-badge { display: inline-block; padding: 6px 10px; background: #eaf6f0; color: #216655; border-radius: 7px; font-size: 13px; font-weight: 600; }
+.ledger-cancelled { color: #8a5555; background: #f8ebeb; }
+.payment-cancelled td { color: #7c888e; background: #fcfafa; }
+.ledger-small { display: block; margin-top: 7px; font-size: 12px; line-height: 1.5; white-space: normal; max-width: 280px; }
+.invoice-revision { margin-top: 14px; padding: 20px; background: #fff; border: 1px solid #e2e8ed; border-radius: 12px; }
+.invoice-revision summary { cursor: pointer; font-weight: 600; line-height: 1.6; }
+.invoice-revision .revision-reason { margin: 14px 0 24px; overflow-wrap: anywhere; }
+.revision-version { margin-top: 24px; }
+.revision-fields { display: flex; flex-wrap: wrap; gap: 16px 28px; margin-bottom: 20px; }
+.revision-fields > div { min-width: 120px; }
+.revision-fields dt { color: #647580; margin-bottom: 5px; font-size: 13px; }
+.revision-fields dd { margin: 0; overflow-wrap: anywhere; }
+.revision-version table { min-width: 850px; font-size: 14px; }
+@media(max-width:600px) { .ledger-card { padding: 20px; } .invoice-revision { padding: 16px; } }

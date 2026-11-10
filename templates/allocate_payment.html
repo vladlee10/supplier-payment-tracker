@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="{{ language }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ _('Привязка оплаты') }}</title>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    {% include "sidebar.html" %}
+    <main class="page-content">
+        <h1>{{ _('Привязка оплаты') }}</h1>
+
+        <h2>{{ payment["supplier_name"] }}</h2>
+
+        <p>
+            {{ _('Оплата от') }} {{ payment["payment_date"] }}:
+            {{ payment["amount_minor"]|money }} ₩
+        </p>
+
+        <p>
+            {{ _('Осталось распределить:') }}
+            <strong>
+                {{ payment["available"]|money }} ₩
+            </strong>
+        </p>
+
+        {% if error %}
+            <p role="alert">{{ error }}</p>
+        {% endif %}
+
+        {% if payment["available"] == 0 %}
+            <p>{{ _('Эта оплата полностью распределена по накладным.') }}</p>
+
+        {% elif invoices %}
+            <form method="post">
+                <input type="hidden" name="expected_available"
+                       value="{{ payment['available'] }}">
+
+                <input type="hidden" id="expected_remaining"
+                       name="expected_remaining">
+
+                <label for="delivery_id">{{ _('Накладная — запись в поставках') }}</label>
+
+                <select id="delivery_id" name="delivery_id" required>
+                    <option value="">{{ _('Выберите накладную') }}</option>
+
+                    {% for invoice in invoices %}
+                        {% if request.form.get('delivery_id') == invoice['id']|string %}
+                            <option value="{{ invoice['id'] }}"
+                                    data-remaining="{{ invoice['remaining'] }}"
+                                    selected>
+                                #{{ invoice["id"] }} · {{ invoice["delivery_date"] }}
+                                {{ _('· остаток') }} {{ invoice["remaining"]|money }} ₩
+                            </option>
+                        {% else %}
+                            <option value="{{ invoice['id'] }}"
+                                    data-remaining="{{ invoice['remaining'] }}">
+                                #{{ invoice["id"] }} · {{ invoice["delivery_date"] }}
+                                {{ _('· остаток') }} {{ invoice["remaining"]|money }} ₩
+                            </option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+
+                <label for="allocation_amount">{{ _('Сумма из этой оплаты, ₩') }}</label>
+
+                <input id="allocation_amount" name="amount_krw" type="number"
+                       min="0.01" step="0.01"
+                       value="{{ request.form.get('amount_krw', '') }}"
+                       required>
+
+                <button type="submit">{{ _('Привязать к накладной') }}</button>
+            </form>
+
+            <script>
+                const invoiceSelect = document.getElementById("delivery_id");
+                const amountInput = document.getElementById("allocation_amount");
+                const remainingInput = document.getElementById("expected_remaining");
+                const available = BigInt("{{ payment['available'] }}");
+
+                function currencyValue(minor) {
+                    return `${minor / 100n}.${(minor % 100n).toString().padStart(2, "0")}`;
+                }
+
+                function updateAllocation(fillAmount) {
+                    const option = invoiceSelect.selectedOptions[0];
+                    const remaining = BigInt(option.dataset.remaining || "0");
+                    const maximum = remaining < available ? remaining : available;
+
+                    remainingInput.value = remaining.toString();
+                    amountInput.max = currencyValue(maximum);
+
+                    if (fillAmount) {
+                        amountInput.value = maximum > 0n ? currencyValue(maximum) : "";
+                    }
+                }
+
+                invoiceSelect.addEventListener("change", () => updateAllocation(true));
+                updateAllocation(false);
+            </script>
+
+        {% else %}
+            <p>
+                {{ _('Неоплаченных накладных у этого поставщика нет.') }}
+            </p>
+        {% endif %}
+    </main>
+</body>
+</html>

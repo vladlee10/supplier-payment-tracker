@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="{{ language }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ _('Проверка накладной') }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+{% include "sidebar.html" %}
+<main class="page-content">
+    <h1>{{ _('Проверьте накладную') }}</h1>
+    <p>{{ _('Сверьте названия, количество и суммы по фото. После сохранения накладная появится в поставках и оплатах.') }}</p>
+    {% if error %}<p role="alert">{{ error }}</p>{% endif %}
+    {% for warning in draft.warnings %}<p class="payment-notice">{{ warning|localize_message }}</p>{% endfor %}
+    {% if draft.previous_balance or draft.balance_with_previous %}
+    <p class="field-hint">{{ _('Прежний долг на фото:') }} {{ draft.previous_balance or _('не прочитан') }} {{ _('₩. Общий долг на фото:') }} {{ draft.balance_with_previous or _('не прочитан') }} {{ _('₩. Эти суммы показаны для сверки и не создают новую задолженность.') }}</p>
+    {% endif %}
+    <details class="original-photo">
+        <summary>{{ _('Открыть фотографию оригинала') }}</summary>
+        <a href="{{ url_for('invoices.image', token=draft.token) }}" target="_blank" rel="noopener">
+            <img src="{{ url_for('invoices.image', token=draft.token) }}" alt="{{ _('Оригинал накладной') }}">
+        </a>
+    </details>
+    <form method="post" class="invoice-review-form" id="review-form">
+        <div class="invoice-fields">
+            <div>
+                <label for="supplier_id">{{ _('Поставщик в учёте') }}</label>
+                <select id="supplier_id" name="supplier_id">
+                    {% for supplier in suppliers %}
+                    <option value="{{ supplier.id }}" {% if selected == supplier.id|string %}selected{% endif %}>{{ supplier.name }}</option>
+                    {% endfor %}
+                    <option value="new" {% if selected == 'new' %}selected{% endif %}>{{ _('Добавить нового поставщика') }}</option>
+                </select>
+            </div>
+            <div>
+                <label for="supplier_name">{{ _('Название поставщика на накладной') }}</label>
+                <input id="supplier_name" name="supplier_name" value="{{ draft.supplier_name }}" maxlength="200">
+            </div>
+        </div>
+        {% include "invoice_editor_fields.html" %}
+        <button type="submit" id="save-invoice">{{ _('Сохранить накладную') }}</button>
+    </form>
+</main>
+<script src="{{ url_for('static', filename='invoice_review.js') }}"></script>
+</body>
+</html>

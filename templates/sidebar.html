@@ -1,0 +1,46 @@
+{% from 'ui_icons.html' import icon %}
+<aside class="sidebar">
+    <a class="sidebar-brand" href="{{ url_for('index') }}">
+        <span class="sidebar-brand-mark">{{ icon('overview',21) }}</span>
+        <span>{{ _('Учёт поставщиков') }}</span>
+    </a>
+    <p class="sidebar-caption">{{ _('Ваш магазин · Южная Корея') }}</p>
+    <span class="sidebar-section-label">{{ _('Рабочее пространство') }}</span>
+    <nav class="sidebar-nav" aria-label="{{ _('Основное меню') }}">
+        <a href="{{ url_for('index') }}" class="{{ 'active' if request.endpoint == 'index' else '' }}" {% if request.endpoint=='index' %}aria-current="page"{% endif %}>
+            {{ icon('overview',18) }}<span>{{ _('Обзор') }}</span>
+        </a>
+        <a href="{{ url_for('suppliers') }}" class="{{ 'active' if request.endpoint in ('suppliers','supplier_management.edit','supplier_management.delete') else '' }}" {% if request.endpoint in ('suppliers','supplier_management.edit','supplier_management.delete') %}aria-current="page"{% endif %}>
+            {{ icon('suppliers',18) }}<span>{{ _('Поставщики') }}</span>
+        </a>
+        <a href="{{ url_for('deliveries') }}" class="{{ 'active' if request.endpoint in ('deliveries','invoices.detail','ledger_corrections.edit_invoice') else '' }}" {% if request.endpoint in ('deliveries','invoices.detail','ledger_corrections.edit_invoice') %}aria-current="page"{% endif %}>
+            {{ icon('box',18) }}<span>{{ _('Поставки') }}</span>
+        </a>
+        <a href="{{ url_for('invoices.upload') }}" class="{{ 'active' if request.endpoint in ('invoices.upload','invoices.review') else '' }}" {% if request.endpoint in ('invoices.upload','invoices.review') %}aria-current="page"{% endif %}>
+            {{ icon('upload',18) }}<span>{{ _('Загрузить накладную') }}</span>
+        </a>
+        <a href="{{ url_for('payments') }}" class="{{ 'active' if request.endpoint in ('payments','allocate_payment','ledger_corrections.cancel_payment') else '' }}" {% if request.endpoint in ('payments','allocate_payment','ledger_corrections.cancel_payment') %}aria-current="page"{% endif %}>
+            {{ icon('wallet',18) }}<span>{{ _('Оплаты') }}</span>
+        </a>
+        <a href="{{ url_for('paid_invoices') }}" class="{{ 'active' if request.endpoint == 'paid_invoices' else '' }}" {% if request.endpoint=='paid_invoices' %}aria-current="page"{% endif %}>
+            {{ icon('check',18) }}<span>{{ _('Оплаченные накладные') }}</span>
+        </a>
+        <a href="{{ url_for('supplier_reports.index') }}" class="{{ 'active' if request.endpoint in ('supplier_reports.index','supplier_reports.download') else '' }}" {% if request.endpoint in ('supplier_reports.index','supplier_reports.download') %}aria-current="page"{% endif %}>
+            {{ icon('document',18) }}<span>{{ _('Отчёты') }}</span>
+        </a>
+    </nav>
+    <form class="language-switch" method="post" action="{{ url_for('change_language') }}">
+        <input type="hidden" name="next" value="{{ request.full_path.rstrip('?') }}">
+        <fieldset>
+            <legend>{{ _('Язык интерфейса') }}</legend>
+            <div class="language-buttons">
+                <button type="submit" name="language" value="ru" lang="ru" aria-label="Русский" aria-pressed="{{ 'true' if language=='ru' else 'false' }}" {% if language=='ru' %}disabled{% endif %}>RU</button>
+                <button type="submit" name="language" value="en" lang="en" aria-label="English" aria-pressed="{{ 'true' if language=='en' else 'false' }}" {% if language=='en' %}disabled{% endif %}>EN</button>
+            </div>
+        </fieldset>
+    </form>
+    <div class="sidebar-footer"><span class="sidebar-currency">₩</span><div><strong>{{ _('Учёт магазина') }}</strong><small><i></i>{{ _('Корейская вона · KRW') }}</small></div></div>
+</aside>
+
+<script id="ui-translations" type="application/json">{{ js_translations|tojson }}</script>
+<script src="{{ url_for('static', filename='i18n.js') }}"></script>

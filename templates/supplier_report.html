@@ -1,0 +1,53 @@
+{% from 'ui_icons.html' import icon %}
+<!DOCTYPE html>
+<html lang="{{ language }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ _('Отчёт по поставщику') }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='reports.css') }}">
+</head>
+<body>
+{% include 'sidebar.html' %}
+<main class="page-content report-page">
+    <header class="report-heading"><div><h1>{{ _('Отчёт по поставщику') }}</h1><p>{{ _('Поставки, оплаты и остаток долга за один месяц.') }}</p></div></header>
+    <form method="get" class="report-controls" action="{{ url_for('supplier_reports.index') }}">
+        <div><label for="report-supplier">{{ _('Поставщик') }}</label><select id="report-supplier" name="supplier_id" required>
+            <option value="">{{ _('Выберите поставщика') }}</option>
+            {% for supplier in suppliers %}<option value="{{ supplier.id }}" {% if selected_id==supplier.id|string %}selected{% endif %}>{{ supplier.name }}</option>{% endfor %}
+        </select></div>
+        <div><label for="report-month">{{ _('Месяц отчёта') }}</label><input id="report-month" name="month" type="month" value="{{ month }}" required></div>
+        <button type="submit">{{ _('Показать отчёт') }}</button>
+    </form>
+    {% if error %}<p role="alert">{{ error }}</p>{% endif %}
+    {% if report %}
+        <div class="report-title-row"><div><h2>{{ report.supplier.name }}</h2><p>{{ report.month_label }} · {{ report.first.isoformat() }} — {{ report.last.isoformat() }}</p></div>
+            <a class="report-download" href="{{ url_for('supplier_reports.download', supplier_id=report.supplier.id, month=report.month) }}">{{ icon('document',18) }}{{ _('Скачать Excel') }}</a>
+        </div>
+        <section class="report-stats" aria-label="{{ _('Итоги месяца') }}">
+            <div><span>{{ _('Остаток на начало месяца') }}</span><strong>{{ report.opening|money }} ₩</strong></div>
+            <div><span>{{ _('Поставки за месяц') }}</span><strong>{{ report.supplied|money }} ₩</strong></div>
+            <div><span>{{ _('Оплаты за месяц') }}</span><strong>{{ report.paid|money }} ₩</strong></div>
+            <div class="report-closing"><span>{{ _('Остаток на конец месяца') }}</span><strong>{{ report.closing|money }} ₩</strong></div>
+        </section>
+        <p class="report-explanation">{{ _('Положительный остаток — долг магазина поставщику. Отрицательный — аванс.') }}</p>
+        <p class="report-explanation">{{ _('Отчёт составлен по текущим записям: исправления учтены, отменённые оплаты исключены.') }}</p>
+        <h2>{{ _('Записи за месяц') }}</h2>
+        <div class="table-scroll"><table class="report-table">
+            <thead><tr><th>{{ _('Дата') }}</th><th>{{ _('Документ') }}</th><th>{{ _('Поставки, ₩') }}</th><th>{{ _('Оплаты, ₩') }}</th><th>{{ _('Остаток, ₩') }}</th><th>{{ _('Примечание') }}</th></tr></thead>
+            <tbody>
+                <tr class="report-bookend"><td>{{ report.first.isoformat() }}</td><td>{{ _('Остаток на начало месяца') }}</td><td>—</td><td>—</td><td>{{ report.opening|money }}</td><td></td></tr>
+                {% for event in report.events %}
+                <tr><td>{{ event.event_date }}</td>
+                    <td>{% if event.kind=='delivery' %}<a href="{{ url_for('invoices.detail', delivery_id=event.id) }}">{{ _('Накладная') }} {{ event.invoice_number or '#' ~ event.id }}</a>{% else %}<a href="{{ url_for('allocate_payment',payment_id=event.id) }}">{{ _('Оплата №') }} {{ event.id }}</a>{% endif %}</td>
+                    <td>{{ event.amount_minor|money if event.kind=='delivery' else '—' }}</td><td>{{ event.amount_minor|money if event.kind=='payment' else '—' }}</td><td>{{ event.balance|money }}</td><td>{{ event.note or '—' }}</td>
+                </tr>
+                {% else %}<tr><td colspan="6">{{ _('За этот месяц поставок и оплат нет. Начальный остаток перенесён на конец месяца.') }}</td></tr>{% endfor %}
+                <tr class="report-bookend"><td>{{ report.last.isoformat() }}</td><td>{{ _('Остаток на конец месяца') }}</td><td>{{ report.supplied|money }}</td><td>{{ report.paid|money }}</td><td>{{ report.closing|money }}</td><td></td></tr>
+            </tbody>
+        </table></div>
+    {% elif not error %}<div class="report-empty">{{ icon('document',30) }}<h2>{{ _('Выберите поставщика и месяц') }}</h2><p>{{ _('Здесь появится сверка, которую можно скачать в Excel.') }}</p></div>{% endif %}
+</main>
+</body>
+</html>

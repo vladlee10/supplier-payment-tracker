@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="{{ language }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ _('Выберите язык') }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+{% include 'sidebar.html' %}
+<main class="page-content"><h1>{{ _('Выберите русский или английский язык.') }}</h1></main>
+</body>
+</html>
